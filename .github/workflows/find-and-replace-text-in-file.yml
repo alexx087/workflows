@@ -33,7 +33,7 @@ jobs:
         shell: bash
         run: |
           if grep -q "${{ inputs.old-text }}" "${{ inputs.file-path }}"; then
-            sed -i '' 's/${{ inputs.old-text }}/${{ inputs.new-text }}/g' ${{ inputs.file-path }}
+            sed -i 's/${{ inputs.old-text }}/${{ inputs.new-text }}/g' ${{ inputs.file-path }}
             echo "Text replacement done."
           else
             echo "Old text not found in the file."
