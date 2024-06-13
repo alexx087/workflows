@@ -1,1 +1,1 @@
-# .github
+Contains reusable workflows

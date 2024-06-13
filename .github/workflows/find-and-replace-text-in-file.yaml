@@ -1,0 +1,63 @@
+name: Find and replace text in a file
+
+on:
+  workflow_call:
+    inputs:
+      old-text:
+        description: "The text to be replaced"
+        required: true
+        type: string
+      new-text:
+        description: "The text to replace old-text with"
+        required: true
+        type: string
+      file-path:
+        description: "The path to the file where the text replacement should occur"
+        required: true
+        type: string
+      commit-message:
+        description: "The commit message to use when committing the changes"
+        required: true
+        type: string
+
+jobs:
+  find-and-replace:
+    name: Find and Replace Text
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Replace text in file
+        shell: bash
+        run: |
+          if grep -q "${{ inputs.old-text }}" "${{ inputs.file-path }}"; then
+            sed -i '' 's/${{ inputs.old-text }}/${{ inputs.new-text }}/g' "${{ inputs.file-path }}"
+            echo "Text replacement done."
+          else
+            echo "Old text not found in the file."
+            exit 1
+          fi
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --exit-code; then
+            echo "No changes to commit."
+            echo "changes=false" >> $GITHUB_ENV
+          else
+            echo "Changes detected."
+            echo "changes=true" >> $GITHUB_ENV
+          fi
+
+      - name: Commit and push changes
+        if: env.changes == 'true'
+        run: |
+          git config --global user.name "github-actions-bot"
+          git config --global user.email "github-actions-bot@greenbone.net"
+          git add "${{ inputs.file-path }}"
+          git commit -m "${{ inputs.commit-message }}"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
